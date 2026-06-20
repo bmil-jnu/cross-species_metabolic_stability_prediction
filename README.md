@@ -67,19 +67,6 @@ attributions drawn on the molecule (Method S6).
 
 ---
 
-## Training
-
-`main.ipynb` runs scaffold-disjoint 10-fold cross-validation from a single full CSV and
-writes fold-wise metrics, a mean±SD summary, and out-of-fold predictions. Set the data
-path in the final cell (`DATA_PATH`, `DATASET_NAME`).
-
-## Building the release bundle
-
-`predict.py` and `explain.py` need a single bundle that pairs the trained model with the
-descriptor scaler, imputation values, column schema, and per-species thresholds. Build it
-once with `export_release_bundle.export_bundle(...)` inside the training notebook (see the
-file header for arguments). Distribute the bundle as a GitHub Release asset.
-
 ## Installation
 
 Confirmed environment (paper): Python 3.12.5, PyTorch 2.2.0, Torch_Geometric 2.6.1,
@@ -92,16 +79,7 @@ The dataset is not committed here. <!-- TODO: deposit on Zenodo and add the DOI 
 Dataset DOI: `TODO`. Training set derived from PubChem BioAssay; external validation from
 ChEMBL (CC-BY-SA — attribute accordingly).
 
-## Citation
-
-<!-- TODO: add citation once published. -->
-`TODO`
-
 ## Contacts
 
 - munsu931122@jnu.ac.kr
 - syyoo@jnu.ac.kr
-
-## License
-
-MIT (see `LICENSE`). <!-- TODO: confirm license choice and fill the copyright line. -->
