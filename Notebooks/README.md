@@ -86,9 +86,9 @@ This package is the standalone-software / accessibility deliverable: it provides
 prediction and explanation visualization without substantial computational expertise. A
 hosted web server / public API is left as future work.
 
-## License / contacts
+## contacts
 
-MIT (see `LICENSE`; fill copyright line). Contacts: munsu931122@jnu.ac.kr, syyoo@jnu.ac.kr
+Contacts: munsu931122@jnu.ac.kr, syyoo@jnu.ac.kr
 
 # Example input
 
