@@ -1139,7 +1139,7 @@ if __name__ == "__main__":
         metric="prc",
         base_lr=1e-4,
         n_splits=10,
-        data_path="D:/metabolic_stability_invitro4444/원본",
+        data_path="root/dataset/",
         patience=10,
         max_epochs=200,
         perf_threshold=0.5,
