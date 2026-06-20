@@ -1,0 +1,245 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "bdec1ca8",
+   "metadata": {},
+   "source": [
+    "# MTMM — Cross-species Microsomal Stability Predictor (Colab)\n",
+    "\n",
+    "A browser-based inference notebook. **No local installation required.**\n",
+    "It predicts liver microsomal metabolic stability for **human (HLM) / rat (RLM) / mouse (MLM)**\n",
+    "from SMILES and SwissADME descriptors.\n",
+    "\n",
+    "- Label convention: `0 = stable`, `1 = unstable` (binarization cutoff t½ ≤ 30 min)\n",
+    "- Input requires a **SMILES column + SwissADME descriptor columns**.\n",
+    "  SwissADME (http://www.swissadme.ch/) is a web tool; some predicted columns\n",
+    "  (CYP/BBB/P-gp/GI) cannot be reproduced locally, so obtain the CSV from SwissADME first and merge it.\n",
+    "\n",
+    "**Steps**: 1) setup → 2) get code & bundle → 3) upload input → 4) predict → 5) save results\n",
+    "\n",
+    "> For speed, pick a GPU via *Runtime → Change runtime type* (CPU also works)."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8438029d",
+   "metadata": {},
+   "source": [
+    "## 1. Environment setup (install)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "f8406db0",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Colab already has torch installed; only PyG and RDKit are added.\n",
+    "# Recent torch_geometric (>=2.3) runs GATv2Conv / GINEConv / pooling /\n",
+    "# JumpingKnowledge with pure-PyTorch fallbacks (no torch-scatter / torch-sparse).\n",
+    "!pip install -q torch_geometric rdkit\n",
+    "\n",
+    "import torch, torch_geometric, rdkit\n",
+    "print(\"torch:\", torch.__version__, \"| CUDA:\", torch.cuda.is_available())\n",
+    "print(\"torch_geometric:\", torch_geometric.__version__, \"| rdkit:\", rdkit.__version__)\n",
+    "\n",
+    "# (Rarely) if PyG raises a scatter-related error, install the following for your torch:\n",
+    "# !pip install -q pyg-lib torch-scatter -f https://data.pyg.org/whl/torch-${TORCH}.html"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "dee87371",
+   "metadata": {},
+   "source": [
+    "## 2. Get the model code and release bundle\n",
+    "\n",
+    "Inference needs two things:\n",
+    "1. **Code**: `model.py`, `dataset_scaffold_modelready.py`, `predict.py`\n",
+    "2. **Release bundle** `mtmm_release.pt` (model + descriptor scaler/impute/schema + per-species thresholds),\n",
+    "   built once with `export_release_bundle.py` in the training notebook.\n",
+    "\n",
+    "The repository and Release download URLs are already filled in. If you have not yet uploaded the\n",
+    "bundle to the Release (`v1.0-revision`), use the **upload option** (Option C) at the bottom of each cell."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "241f96e6",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import sys, os\n",
+    "\n",
+    "# ── Option A: clone the code from GitHub (recommended) ────────────────\n",
+    "REPO_URL = \"https://github.com/bmil-jnu/cross-species_metabolic_stability_prediction.git\"   # edit if your repo path differs\n",
+    "CODE_DIR = \"/content/repo\"\n",
+    "if not os.path.exists(CODE_DIR):\n",
+    "    !git clone -q \"$REPO_URL\" \"$CODE_DIR\"\n",
+    "sys.path.insert(0, CODE_DIR)\n",
+    "\n",
+    "# ── Option B (alternative): upload the code files if you have no repo ──\n",
+    "#   upload model.py / dataset_scaffold_modelready.py / predict.py\n",
+    "# from google.colab import files\n",
+    "# files.upload()\n",
+    "# sys.path.insert(0, \"/content\")\n",
+    "\n",
+    "# check imports\n",
+    "import model  # noqa: F401  (needed so the bundle unpickles model.MTMM)\n",
+    "from predict import load_bundle, run_inference\n",
+    "from dataset_scaffold_modelready import PHYS_COLS, CONT_COLS, CAT_COLS, find_smiles_column\n",
+    "print(\"code loaded\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "e61c029a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Download the release bundle\n",
+    "BUNDLE_PATH = \"/content/mtmm_release.pt\"\n",
+    "\n",
+    "# ── Option A: download from a GitHub Release asset ──\n",
+    "BUNDLE_URL = \"https://github.com/bmil-jnu/cross-species_metabolic_stability_prediction/releases/download/v1.0-revision/mtmm_release.pt\"  # edit if your release tag differs\n",
+    "if not os.path.exists(BUNDLE_PATH):\n",
+    "    !wget -q -O \"$BUNDLE_PATH\" \"$BUNDLE_URL\"\n",
+    "\n",
+    "# ── Option B (alternative): download from Google Drive ──\n",
+    "# !pip install -q gdown\n",
+    "# import gdown; gdown.download(id=\"<GDRIVE_FILE_ID>\", output=BUNDLE_PATH, quiet=True)  # TODO\n",
+    "\n",
+    "# ── Option C (alternative): upload directly ──\n",
+    "# from google.colab import files\n",
+    "# up = files.upload(); BUNDLE_PATH = \"/content/\" + list(up.keys())[0]\n",
+    "\n",
+    "assert os.path.exists(BUNDLE_PATH) and os.path.getsize(BUNDLE_PATH) > 0, \\\n",
+    "    \"Bundle not found. Fill in the URL above or use the upload option.\"\n",
+    "print(\"bundle:\", BUNDLE_PATH, \"|\", os.path.getsize(BUNDLE_PATH), \"bytes\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1490a6bf",
+   "metadata": {},
+   "source": [
+    "## 3. Upload the input CSV (SMILES + SwissADME)\n",
+    "\n",
+    "- The SMILES column must be named one of `Cano_Smile`, `SMILES`, `PUBCHEM_EXT_DATASOURCE_SMILES`.\n",
+    "- Use the SwissADME descriptor columns exactly as exported from the SwissADME web tool.\n",
+    "- Missing SwissADME columns are imputed with training values, but the more are missing, the further from the validated setting."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "83e56c69",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from google.colab import files\n",
+    "import pandas as pd\n",
+    "\n",
+    "print(\"Upload a CSV containing SMILES + SwissADME columns.\")\n",
+    "up = files.upload()\n",
+    "INPUT_CSV = \"/content/\" + list(up.keys())[0]\n",
+    "df = pd.read_csv(INPUT_CSV)\n",
+    "print(\"rows:\", len(df), \"| cols:\", len(df.columns))\n",
+    "\n",
+    "# check required columns\n",
+    "required = PHYS_COLS + CONT_COLS + CAT_COLS\n",
+    "missing = [c for c in required if c not in df.columns]\n",
+    "smi_col = find_smiles_column(df)\n",
+    "\n",
+    "print(\"SMILES column:\", smi_col)\n",
+    "assert smi_col is not None, \"SMILES column not found (check allowed headers).\"\n",
+    "if missing:\n",
+    "    print(f\"⚠️ Missing SwissADME columns ({len(missing)}/{len(required)}):\")\n",
+    "    print(\"   \", missing)\n",
+    "else:\n",
+    "    print(\"✅ All SwissADME columns present\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fe15cf71",
+   "metadata": {},
+   "source": [
+    "## 4. Run prediction"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "6676894a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "device = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\n",
+    "bundle = load_bundle(BUNDLE_PATH, device)\n",
+    "print(\"tasks:\", bundle[\"tasks\"], \"| thresholds:\", bundle[\"thresholds\"])\n",
+    "\n",
+    "preds = run_inference(bundle, df, device, batch_size=64)\n",
+    "preds.head(20)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f5f68f77",
+   "metadata": {},
+   "source": [
+    "## 5. Save / download results"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c6b352c6",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "OUT_CSV = \"predictions.csv\"\n",
+    "preds.to_csv(OUT_CSV, index=False)\n",
+    "print(\"saved:\", OUT_CSV, \"| rows:\", len(preds))\n",
+    "\n",
+    "from google.colab import files\n",
+    "files.download(OUT_CSV)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "335f9026",
+   "metadata": {},
+   "source": [
+    "---\n",
+    "### Notes\n",
+    "\n",
+    "- In the output, `prob_*` is the positive (unstable) probability and `pred_*` applies the per-species threshold.\n",
+    "- A **structure-only mode** (fingerprint+graph, no SwissADME descriptors) requires a separate\n",
+    "  structure-only model bundle and is not included in this notebook by default.\n",
+    "- A hosted web server / public API is left as future work. This notebook is the accessibility\n",
+    "  deliverable that lets anyone apply the model without local installation."
+   ]
+  }
+ ],
+ "metadata": {
+  "accelerator": "GPU",
+  "colab": {
+   "provenance": [],
+   "toc_visible": true
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "name": "python3"
+  },
+  "language_info": {
+   "name": "python"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
