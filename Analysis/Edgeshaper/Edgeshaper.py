@@ -97,14 +97,7 @@ except Exception:
 # Helper Functions
 # ------------------------------------------------------------------------------
 def _prep_fp_tensor(fp: torch.Tensor, B: int, L: int = 100) -> torch.Tensor:
-    """
-    Normalize FP tensor shape to (B, L).
 
-    Supported:
-      - (B, 1, L) -> squeeze
-      - (B*L,)    -> reshape
-      - (B, L)    -> 그대로 사용
-    """
     if fp.dim() == 3 and fp.size(1) == 1:
         fp = fp.squeeze(1)
     if fp.dim() == 1 and fp.numel() == B * L:
@@ -596,7 +589,7 @@ def main_train(
     metric: str = "prc",
     base_lr: float = 1e-4,
     n_splits: int = 10,
-    data_path: str = "D:/metabolic_stability_invitro4444/원본",
+    data_path: str = "root/dataset/",
     patience: int = 10,
     max_epochs: int = 200,
     perf_threshold: float = 0.5,
