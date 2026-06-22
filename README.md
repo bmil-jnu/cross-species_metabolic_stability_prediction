@@ -42,7 +42,7 @@ Open the notebook in Colab and run top to bottom — it installs dependencies in
 browser, downloads the released model, takes your input file, and returns predictions and
 explanation figures:
 
-[Open in Colab](https://colab.research.google.com/github/bmil-jnu/cross-species_metabolic_stability_prediction/blob/main/notebooks/MTMM_predict_colab.ipynb)
+[Colab File](https://github.com/bmil-jnu/cross-species_metabolic_stability_prediction/tree/main/Notebooks/MTMM_predict_colab.ipynb)
 
 ---
 
