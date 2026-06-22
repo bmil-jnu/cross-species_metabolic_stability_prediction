@@ -34,10 +34,6 @@ For interpretability, the framework provides **descriptor-level SHAP** attributi
 attribution (which substructures stabilize or destabilize a molecule), and a
 **fragment–ADME enrichment** analysis linking local motifs to whole-molecule properties.
 
-> Paper: *Cross-species multi-task learning with molecular and ADME descriptors for liver
-> microsomal metabolic stability.* Subhin Seomun, Sunyong Yoo. Chonnam National University;
-> R&D Center, MATILO AI Inc. <!-- TODO: add venue / DOI when available -->
-
 ---
 
 ## Try it without local setup (Google Colab)
