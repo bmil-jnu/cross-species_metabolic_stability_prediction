@@ -56,7 +56,7 @@ explanation figures:
 ├── predict.py                     # inference CLI (mtmm-predict)
 ├── export_release_bundle.py       # pack trained model + scaler + thresholds -> mtmm_release.pt
 ├── explain.py                     # descriptor SHAP + EdgeSHAPer
-├── notebooks/MTMM_predict_colab.ipynb
+├── notebooks/predict_colab.ipynb
 ├── analysis/                      # interpretability analysis (SHAP / EdgeSHAPer / fragment enrichment)
 ├── examples/                      # input format
 ├── data/                          # datasets
