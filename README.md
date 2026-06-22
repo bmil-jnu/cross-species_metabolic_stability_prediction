@@ -25,8 +25,7 @@ These modalities are fused and passed to a **shared network plus species-specifi
 output networks**, so the model captures general structure–metabolism patterns while
 still expressing species-dependent effects. It is trained on a curated set of nearly
 19,000 microsomal half-life measurements from **PubChem BioAssay** (HLM, RLM, MLM) and
-evaluated with **stratified 10-fold Bemis–Murcko scaffold cross-validation**, ensemble
-predictions, and species-specific thresholds. Across species the model outperforms
+evaluated with **stratified 10-fold Bemis–Murcko scaffold cross-validation** and species-specific thresholds. Across species the model outperforms
 conventional machine-learning and single-task deep-learning baselines.
 
 For interpretability, the framework provides **descriptor-level SHAP** attribution
